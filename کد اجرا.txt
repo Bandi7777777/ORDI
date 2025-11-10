@@ -1,0 +1,2 @@
+cd "D:\Projects\1. Website\1.Code\6. REPAIR\repair-client"
+pnpm dev

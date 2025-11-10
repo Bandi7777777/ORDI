@@ -1,0 +1,29 @@
+<!-- D:\Projects\1. Website\1.Code\6. REPAIR\repair-client\index.html -->
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>سامانه‌ی تعمیر قطعات</title>
+  </head>
+  <body>
+    <div id="root">در حال بارگذاری…</div>
+    <!-- نمایش خطاهای زمان اجرا حتی قبل از mount -->
+    <script>
+      (function () {
+        const el = document.getElementById('root');
+        window.addEventListener('error', (e) => {
+          el.innerHTML =
+            '<pre dir="ltr" style="white-space:pre-wrap;font:13px/1.5 ui-monospace,Consolas;padding:12px;color:#b00020;background:#fff0f0;border:1px solid #ffcdd2;border-radius:8px;">' +
+            (e.message || e.error) + '</pre>';
+        });
+        window.addEventListener('unhandledrejection', (e) => {
+          el.innerHTML =
+            '<pre dir="ltr" style="white-space:pre-wrap;font:13px/1.5 ui-monospace,Consolas;padding:12px;color:#b00020;background:#fff0f0;border:1px solid #ffcdd2;border-radius:8px;">' +
+            (e.reason?.message || e.reason || 'Unhandled rejection') + '</pre>';
+        });
+      })();
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

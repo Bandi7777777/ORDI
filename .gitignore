@@ -1,0 +1,78 @@
+# --- ORDI: core ignores ---
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*.orig
+*.log
+
+# caches & builds
+node_modules/
+.cache/
+dist/
+build/
+out/
+tmp/
+temp/
+coverage/
+reports/
+.next/
+.nuxt/
+.vite/
+.parcel-cache/
+.angular/cache/
+
+# Python
+__pycache__/
+.venv/
+.env
+.env.*
+.mypy_cache/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# .NET / C#
+bin/
+obj/
+packages/
+TestResults/
+.vs/
+*.user
+*.suo
+
+# PHP / Composer
+vendor/
+
+# Java / JVM
+.gradle/
+target/
+*.iml
+
+# IDEs
+.idea/
+.history/
+
+# VS Code (keep common JSON configs)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Big binary sources (usually keep out of Git)
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+*.iso
+*.psd
+*.ai
+*.xd
+*.sketch
+*.blend
+*.fbx
