@@ -2,33 +2,48 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Layout from "./components/Layout";
 import Toolbar from "./components/Toolbar";
 import QuickActions from "./components/QuickActions";
-import PartForm from "./components/PartForm"; // اگر کامپکت را جایگزین کردی، این را به "./components/PartForm.compact" تغییر بده
+// اگر نسخه کامپکت فرم را می‌خواهی، این خط را به "./components/PartForm.compact" تغییر بده
+import PartForm from "./components/PartForm.compact";
 import PartTable from "./components/PartTable";
 import SettingsPanel from "./components/SettingsPanel";
 import Dashboard from "./components/Dashboard";
 import AttachmentList from "./components/AttachmentList";
-import Toast from "./components/Toast";
+// ToastPro فقط اینجاست
+import ToastPro from "./components/ui/ToastPro";
 
-import type { Part, Settings, Theme, Palette } from "./types";
+import type { Part, Settings, Theme, Palette, Currency } from "./types";
 import {
   addPart, allParts, deletePart, exportAll, getSettings, importAll, saveSettings, updatePart
 } from "./lib/db";
 import { todayJalaliYMD } from "./utils/jalali";
 
+/* ---------------- Types ---------------- */
 type Filters = {
   q: string;
-  status: string;    // "" | "pending" | "repaired"
-  settled: string;   // "" | "yes" | "no"
-  severity: string;  // CSV: "" | "normal,urgent"
+  status: string;                // "" | "pending" | "repaired"
+  settled: string;               // "" | "yes" | "no"
+  severity: string;              // CSV
   dateType: "received" | "completed" | "delivered";
-  from: string;      // ISO
-  to: string;        // ISO
+  from: string;                  // ISO
+  to: string;                    // ISO
+};
+type ToastItem = {
+  id: string;
+  message: string;
+  type?: "info" | "success" | "error" | "warning";
+  duration?: number;
 };
 
 const FILTER_KEY = "repair-filters";
 
+/* ===================================================== */
 export default function App() {
+  /* -------- data -------- */
   const [parts, setParts] = useState<Part[]>([]);
+  const [settings, setSettings] = useState<Settings | null>(null);
+
+  /* -------- UI state -------- */
+  const [view, setView] = useState<"list"|"dashboard"|"settings">("list");
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Part | null>(null);
 
@@ -39,27 +54,35 @@ export default function App() {
       : { q:"", status:"", settled:"", severity:"", dateType:"received", from:"", to:"" };
   });
 
-  const [view, setView] = useState<"list"|"dashboard"|"settings">("list");
-  const [settings, setSettings] = useState<Settings | null>(null);
+  /* -------- theme/palette -------- */
   const [theme, setTheme] = useState<Theme>("system");
   const [palette, setPalette] = useState<Palette>("ink");
-  const [toast, setToast] = useState("");
 
+  /* -------- ToastPro -------- */
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  function addToast(message: string, type: ToastItem["type"] = "info", duration = 2200) {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+    setToasts((prev) => [...prev, { id, message, type, duration }]);
+  }
+  function removeToast(id: string) {
+    setToasts((prev) => prev.filter(t => t.id !== id));
+  }
+
+  /* -------- Export/Import input ref -------- */
   const importInputRef = useRef<HTMLInputElement>(null);
 
-  /* -------- Theme & Palette -------- */
+  /* -------- theme apply -------- */
   const applyTheme = useCallback((mode: Theme, pal: Palette) => {
-    setTheme(mode);
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const isDark = mode === "dark" || (mode === "system" && prefersDark);
     document.documentElement.classList.toggle("dark", isDark);
-
-    setPalette(pal);
     document.body.classList.remove("theme-ink","theme-prism","theme-sunset");
     document.body.classList.add(`theme-${pal}`);
+    setTheme(mode);
+    setPalette(pal);
   }, []);
 
-  /* -------- Data -------- */
+  /* -------- load data -------- */
   const loadData = useCallback(async () => {
     const [ps, s] = await Promise.all([allParts(), getSettings()]);
     setParts(ps);
@@ -69,9 +92,8 @@ export default function App() {
 
   useEffect(() => { loadData(); }, [loadData]);
   useEffect(() => { localStorage.setItem(FILTER_KEY, JSON.stringify(filters)); }, [filters]);
-  useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(""), 2200); return () => clearTimeout(t); }, [toast]);
 
-  /* -------- Filtering -------- */
+  /* -------- filter logic -------- */
   const matches = useCallback((p: Part, f: Filters) => {
     if (f.status && p.status !== f.status) return false;
     if (f.settled) {
@@ -82,11 +104,13 @@ export default function App() {
       const list = f.severity.split(",").filter(Boolean);
       if (list.length && !list.includes(p.severity)) return false;
     }
-    const dateISO = f.dateType === "received" ? p.receivedDate
-                   : f.dateType === "completed" ? (p.completedDate || "")
-                   : (p.deliveredDate || "");
+    const dateISO =
+      f.dateType === "received"  ? p.receivedDate :
+      f.dateType === "completed" ? (p.completedDate || "") :
+                                   (p.deliveredDate || "");
+
     if (f.from && (!dateISO || new Date(dateISO).getTime() < new Date(f.from).getTime())) return false;
-    if (f.to &&   (!dateISO || new Date(dateISO).getTime() > new Date(f.to).getTime())) return false;
+    if (f.to   && (!dateISO || new Date(dateISO).getTime() > new Date(f.to).getTime()))   return false;
 
     if (f.q) {
       const q = f.q.trim().toLowerCase();
@@ -96,15 +120,45 @@ export default function App() {
     return true;
   }, []);
 
-  const filtered = useMemo(() => parts.filter((p) => matches(p, filters)), [parts, filters, matches]);
+  const filtered = useMemo(() => parts.filter(p => matches(p, filters)), [parts, filters, matches]);
 
-  /* -------- CRUD -------- */
-  async function handleCreate(p: Part) { await addPart(p); await loadData(); setShowForm(false); setToast("قطعه جدید ثبت شد."); }
-  async function handleUpdate(p: Part) { if (!editing?.id) return; await updatePart(editing.id, p); await loadData(); setEditing(null); setToast("به‌روزرسانی شد."); }
-  async function handleDelete(id: number) { await deletePart(id); await loadData(); setToast("حذف شد."); }
-  async function handleToggleSettled(p: Part) { if (!p.id) return; await updatePart(p.id, { settled: !p.settled }); await loadData(); }
-  async function handleBulkDelete(ids: number[]) { if (!ids.length) return; await Promise.all(ids.map(id=>deletePart(id))); await loadData(); setToast("حذف گروهی انجام شد."); }
-  async function handleBulkSettle(ids: number[], settled: boolean) { if (!ids.length) return; await Promise.all(ids.map(id=>updatePart(id,{ settled }))); await loadData(); setToast("تغییر وضعیت گروهی انجام شد."); }
+  /* -------- CRUD handlers -------- */
+  async function handleCreate(p: Part) {
+    await addPart(p);
+    await loadData();
+    setShowForm(false);
+    addToast("قطعه جدید ثبت شد.", "success");
+  }
+  async function handleUpdate(p: Part) {
+    if (!editing?.id) return;
+    await updatePart(editing.id, p);
+    await loadData();
+    setEditing(null);
+    addToast("به‌روزرسانی شد.", "success");
+  }
+  async function handleDelete(id: number) {
+    await deletePart(id);
+    await loadData();
+    addToast("حذف شد.", "success");
+  }
+  async function handleToggleSettled(p: Part) {
+    if (!p.id) return;
+    await updatePart(p.id, { settled: !p.settled });
+    await loadData();
+    addToast(p.settled ? "به حالت تسویه‌نشده تغییر کرد." : "تسویه شد.", "info");
+  }
+  async function handleBulkDelete(ids: number[]) {
+    if (!ids.length) return;
+    await Promise.all(ids.map(id => deletePart(id)));
+    await loadData();
+    addToast("حذف گروهی انجام شد.", "success");
+  }
+  async function handleBulkSettle(ids: number[], settled: boolean) {
+    if (!ids.length) return;
+    await Promise.all(ids.map(id => updatePart(id, { settled })));
+    await loadData();
+    addToast(`تغییر وضعیت گروهی: ${settled ? "تسویه شد" : "تسویه‌نشده"}.`, "success");
+  }
 
   /* -------- Export / Import -------- */
   async function exportJSON() {
@@ -114,21 +168,25 @@ export default function App() {
     const a = document.createElement("a");
     a.href = url; a.download = `repair_backup_${todayJalaliYMD()}.json`; a.click();
     URL.revokeObjectURL(url);
-    setToast("خروجی JSON آماده شد.");
+    addToast("خروجی JSON آماده شد.", "success");
   }
   async function handleImportChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; if (!file) return;
-    const text = await file.text(); await importAll(JSON.parse(text)); await loadData();
-    setToast("ورودی JSON اعمال شد."); e.target.value = "";
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    await importAll(JSON.parse(text));
+    await loadData();
+    addToast("ورودی JSON اعمال شد.", "success");
+    e.target.value = "";
   }
 
-  /* ---------- Guard ---------- */
-  if (!settings) {
-    // پیش از لود شدن Settings چیزی با settings.currency رندر نشود
-    return <div className="p-6 opacity-75">در حال بارگذاری…</div>;
-  }
-  const currency = settings.currency ?? "TOMAN"; // گارد دوم
+  /* -------- guard while loading settings -------- */
+if (!settings) {
+  return <div className="shell" style={{padding:"24px"}}>در حال بارگذاری…</div>;
+}
+const currency = settings?.currency ?? "TOMAN";
 
+  /* -------- render -------- */
   return (
     <>
       <input ref={importInputRef} type="file" accept="application/json" className="hidden" onChange={handleImportChange} />
@@ -137,10 +195,19 @@ export default function App() {
         current={view}
         onNavigate={(v) => { setView(v); setShowForm(false); setEditing(null); }}
         theme={theme}
-        onThemeToggle={async (t) => { const next = await saveSettings({ theme: t as Theme }); setSettings(next); applyTheme(next.theme, next.palette ?? "ink"); }}
+        onThemeToggle={async (t) => {
+          const next = await saveSettings({ theme: t as Theme });
+          setSettings(next);
+          applyTheme(next.theme, next.palette ?? "ink");
+        }}
         palette={palette}
-        onPaletteChange={async (p) => { const next = await saveSettings({ palette: p as Palette }); setSettings(next); applyTheme(next.theme, next.palette ?? "ink"); }}
+        onPaletteChange={async (p) => {
+          const next = await saveSettings({ palette: p as Palette });
+          setSettings(next);
+          applyTheme(next.theme, next.palette ?? "ink");
+        }}
       >
+        {/* لیست */}
         {view === "list" && (
           <section className="shell" data-page="list">
             <QuickActions
@@ -160,10 +227,14 @@ export default function App() {
 
             <Toolbar
               onAddClick={() => { setEditing(null); setShowForm(true); }}
-              filters={{ q:filters.q, status:filters.status, settled:filters.settled, severity:filters.severity, dateType:filters.dateType, from:filters.from, to:filters.to }}
+              filters={{
+                q: filters.q, status: filters.status, settled: filters.settled,
+                severity: filters.severity, dateType: filters.dateType,
+                from: filters.from, to: filters.to
+              }}
               onFiltersChange={(patch) => setFilters({ ...filters, ...patch })}
               onFiltersReset={() => setFilters({ q:"", status:"", settled:"", severity:"", dateType:"received", from:"", to:"" })}
-              onFiltersSave={() => { localStorage.setItem(FILTER_KEY, JSON.stringify(filters)); setToast("فیلتر ذخیره شد."); }}
+              onFiltersSave={() => { localStorage.setItem(FILTER_KEY, JSON.stringify(filters)); addToast("فیلتر ذخیره شد.", "info"); }}
             />
 
             {showForm && !editing && (
@@ -193,9 +264,9 @@ export default function App() {
           </section>
         )}
 
+        {/* داشبورد (Tiles) */}
         {view === "dashboard" && (
           <section className="shell">
-            {/* CTAها واقعاً کار می‌کنند */}
             <Dashboard
               parts={parts}
               currency={currency}
@@ -205,6 +276,7 @@ export default function App() {
           </section>
         )}
 
+        {/* تنظیمات */}
         {view === "settings" && (
           <section className="shell">
             <SettingsPanel
@@ -213,14 +285,15 @@ export default function App() {
                 const next = await saveSettings(patch);
                 setSettings(next);
                 applyTheme(next.theme, next.palette ?? "ink");
-                setToast("تنظیمات ذخیره شد.");
+                addToast("تنظیمات ذخیره شد.", "success");
               }}
             />
           </section>
         )}
       </Layout>
 
-      <Toast text={toast} onClose={() => setToast("")} />
+      {/* فقط ToastPro */}
+      <ToastPro toasts={toasts} removeToast={removeToast} />
     </>
   );
 }

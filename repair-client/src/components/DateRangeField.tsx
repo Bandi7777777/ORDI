@@ -11,16 +11,15 @@ type Props = {
 
 export default function DateRangeField({ type, onTypeChange, from, to, onFrom, onTo }: Props) {
   return (
-    <div className="datebox">
-      <div className="seg">
-        <button className={`seg-btn ${type==="received"?"active":""}`}  onClick={()=>onTypeChange("received")}>دریافت</button>
-        <button className={`seg-btn ${type==="completed"?"active":""}`} onClick={()=>onTypeChange("completed")}>تکمیل</button>
-        <button className={`seg-btn ${type==="delivered"?"active":""}`} onClick={()=>onTypeChange("delivered")}>تحویل</button>
+    <div className="flex flex-wrap items-center gap-2 p-2 rounded-lg" style={{ border:"1px solid var(--line)", background:"rgba(255,255,255,.05)"}}>
+      <div className="flex items-center gap-1">
+        <button className={`btn ${type==="received"?"btn-tone":"btn-ghost"} text-xs`} onClick={()=>onTypeChange("received")}>تحویل‌گیری</button>
+        <button className={`btn ${type==="completed"?" btn-tone":"btn-ghost"} text-xs`} onClick={()=>onTypeChange("completed")}>تکمیل</button>
+        <button className={`btn ${type==="delivered"?" btn-tone":"btn-ghost"} text-xs`} onClick={()=>onTypeChange("delivered")}>تحویل</button>
       </div>
-      <div className="date-range__body mt-2">
-        <JalaliDatePicker label="از" value={from} onChange={onFrom}/>
-        <span className="date-range__dash">—</span>
-        <JalaliDatePicker label="تا" value={to} onChange={onTo}/>
+      <div className="flex items-end gap-2" style={{marginInlineStart:"auto"}}>
+        <Jalali?Picker label="از" value={from} onChange={onFrom}/>
+        <Jalali?Picker label="تا" value={to} onChange={onTo}/>
       </div>
     </div>
   );

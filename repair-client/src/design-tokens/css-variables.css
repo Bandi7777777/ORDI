@@ -1,0 +1,44 @@
+/* Base (theme-ink) */
+:root,
+body.theme-ink {
+  --color-primary:        #2be5b9;
+  --color-primary-dark:   #20c9a1;
+  --color-surface-dark:   rgba(16,22,34,0.78);
+  --color-surface-light:  rgba(255,255,255,0.90);
+  --color-text:           #eaf1ff;
+  --color-text-2:         #97a7c0;
+  --color-on-primary:     #041019;
+  --color-border:         rgba(210,225,255,0.14);
+
+  --spacing-xs: 6px; --spacing-sm: 10px; --spacing-md: 16px; --spacing-lg: 20px; --spacing-xl: 28px;
+  --radius-sm: 10px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 22px; --radius-full: 999px;
+  --shadow-sm: 0 10px 26px rgba(3,10,24,.28);
+  --shadow-md: 0 22px 70px rgba(3,10,24,.45);
+  --shadow-lg: 0 30px 90px rgba(3,10,24,.55);
+
+  --font-sm: 0.85rem; --font-base: 0.95rem; --font-lg: 1.1rem;
+  --easing-default: cubic-bezier(.4,0,.2,1);
+  --duration-normal: 180ms;
+}
+
+/* Prism palette (روشن) */
+body.theme-prism {
+  --color-text: #0f172a;
+  --color-text-2: #45556e;
+  --color-surface-dark: rgba(255,255,255,0.90);
+  --color-border: rgba(19,26,46,0.12);
+}
+
+/* Sunset palette (گرم) */
+body.theme-sunset {
+  --color-text: #fdefff;
+  --color-text-2: #cfbdd8;
+  --color-surface-dark: rgba(24,16,28,0.78);
+  --color-border: rgba(255,255,255,0.16);
+}
+
+/* Short aliases for Tailwind arbitrary values */
+:root {
+  --fg-1: var(--color-text);
+  --fg-2: var(--color-text-2);
+}

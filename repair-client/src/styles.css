@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./design-tokens/css-variables.css";
 
 /* ===== Theme (Dark glass + subtle neon) ===== */
 :root{
@@ -98,3 +99,20 @@ body{
 .tile{ padding:1rem; border-radius:16px; border:1px solid var(--line); background:rgba(255,255,255,.04); box-shadow: var(--shadow); }
 .tile .k{ font-size:.82rem; opacity:.85; }
 .tile .v{ font-size:1.8rem; font-weight:800; }
+.input,.select,.textarea{ padding:.72rem 1rem; border-radius:14px; }
+.select-portal{ position:fixed; z-index:1000; }
+.shell{ max-width:1280px; margin-inline:auto; padding-inline:20px; }
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slideIn { animation: slideIn 200ms ease-out both; }
+.toolbar-pro { border-radius: 16px; }
+/* Toolbar shell (کمی لطیف‌تر) */
+.toolbar-pro { border-radius: 16px; }
+
+/* فاصلهٔ امن در ورودی‌ها و سلکت‌ها */
+.input, .select { padding: .72rem 1rem; border-radius: 14px; }
+
+/* پاپ‌اور سلکت همیشه روی همه‌چیز */
+.select-popover, .select-portal { position: fixed; z-index: 1000; }
