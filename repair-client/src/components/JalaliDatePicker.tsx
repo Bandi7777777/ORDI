@@ -24,7 +24,7 @@ const JalaliDatePicker: React.FC<Props> = ({ label, value, onChange }) => {
 
   return (
     <div className="flex flex-col" style={{ direction: 'rtl' }}>
-      <label className="text-sm mb-1 text-gray-700 dark:text-gray-300 font-medium">{label}</label>
+      <label className="text-sm mb-1 font-medium">{label}</label>
       <DatePicker
         value={selectedDate}
         onChange={handleChange}
@@ -33,7 +33,7 @@ const JalaliDatePicker: React.FC<Props> = ({ label, value, onChange }) => {
         format="YYYY/MM/DD"
         calendarPosition="bottom-right"
         placeholder="انتخاب تاریخ"
-        className="input px-4 py-3 w-full flex items-center justify-between text-base font-medium rounded-xl shadow-sm hover:shadow-md border border-gray-300 dark:border-gray-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:ring-indigo-800 transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        className="input w-full"
         editable={true}
       />
     </div>
