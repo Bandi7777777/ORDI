@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import SelectPro, { SelectOption } from "./ui/SelectPro";
 import JalaliDatePicker from "./JalaliDatePicker";
 
 type Filters = {
@@ -18,7 +17,7 @@ type Props = {
   onFiltersChange: (patch: Partial<Filters>) => void;
   onFiltersReset: () => void;
   onFiltersSave: () => void;
-  showSearch?: boolean;  // whether to display the search field
+  showSearch?: boolean;
 };
 
 const IcStatus = (
@@ -44,19 +43,6 @@ const IcBolt = (
   </svg>
 );
 
-// Options for status and settled selects (with icons)
-const statusOptions: SelectOption[] = [
-  { label: "همه وضعیت‌ها", value: "", icon: IcStatus },
-  { label: "در جریان",     value: "pending",  icon: IcClock },
-  { label: "تعمیر شده",    value: "repaired", icon: IcCheck },
-];
-const settledOptions: SelectOption[] = [
-  { label: "تسویه (همه)", value: "",   icon: IcStatus },
-  { label: "تسویه شد",    value: "yes", icon: IcCheck },
-  { label: "تسویه نشده",  value: "no",  icon: IcClock },
-];
-
-// Severity values for segmented toggle (multi-select allowed)
 const severityLabels: Record<string, string> = {
   normal: "عادی",
   urgent: "فوری",
@@ -68,7 +54,6 @@ const severityIcons: Record<string, JSX.Element> = {
   critical: IcClock,
 };
 
-// Date type values for segmented toggle (single-select)
 const dateTypeLabels: Record<Filters["dateType"], string> = {
   received: "دریافت",
   completed: "تکمیل",
@@ -93,11 +78,22 @@ export default function Toolbar({
     filters.severity ? filters.severity.split(",").filter(Boolean) : []
   );
   useEffect(() => {
+    // Update parent filter whenever local severity changes
     onFiltersChange({ severity: sev.join(",") });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sev]);
 
-  // Compute placeholder or label for severity (for accessibility or tooltip)
+  // Sync severity state if filters prop changes (e.g., on reset)
+  useEffect(() => {
+    const current = sev.join(",");
+    if (filters.severity !== current) {
+      const values = filters.severity ? filters.severity.split(",").filter(Boolean) : [];
+      setSev(values);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.severity]);
+
+  // Human-readable label for selected severities (for tooltips or summary)
   const sevLabel = useMemo(() => {
     if (!sev.length) return "اولویت (همه)";
     const labels = sev.map(v => severityLabels[v] || v);
@@ -107,35 +103,65 @@ export default function Toolbar({
 
   return (
     <div className="toolbar-pro card p-3 mb-4">
-      {/* Row 1: Add button and primary filters */}
+      {/* Row 1: primary filters and actions */}
       <div className="flex flex-wrap items-center gap-3">
         <button className="btn btn-primary" onClick={onAddClick}>
           + ثبت قطعه جدید
         </button>
 
-        {/* Status filter */}
-        <div className="w-40">
-          <SelectPro
-            value={filters.status}
-            onChange={(v) => onFiltersChange({ status: v })}
-            options={statusOptions}
-            ariaLabel="وضعیت"
-            placeholder="وضعیت"
-          />
+        {/* Status filter chips */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className={`chip ${!filters.status ? "chip--cyan" : ""}`}
+            onClick={() => onFiltersChange({ status: "" })}
+            title="همه وضعیت‌ها"
+          >
+            {IcStatus} همه وضعیت‌ها
+          </button>
+          <button
+            type="button"
+            className={`chip ${filters.status === "pending" ? "chip--violet" : ""}`}
+            onClick={() => onFiltersChange({ status: "pending" })}
+          >
+            {IcClock} در جریان
+          </button>
+          <button
+            type="button"
+            className={`chip ${filters.status === "repaired" ? "chip--mint" : ""}`}
+            onClick={() => onFiltersChange({ status: "repaired" })}
+          >
+            {IcCheck} تعمیر شده
+          </button>
         </div>
 
-        {/* Settled filter */}
-        <div className="w-40">
-          <SelectPro
-            value={filters.settled}
-            onChange={(v) => onFiltersChange({ settled: v })}
-            options={settledOptions}
-            ariaLabel="تسویه"
-            placeholder="تسویه"
-          />
+        {/* Settled filter chips */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className={`chip ${!filters.settled ? "chip--cyan" : ""}`}
+            onClick={() => onFiltersChange({ settled: "" })}
+            title="تسویه (همه)"
+          >
+            {IcStatus} تسویه (همه)
+          </button>
+          <button
+            type="button"
+            className={`chip ${filters.settled === "yes" ? "chip--mint" : ""}`}
+            onClick={() => onFiltersChange({ settled: "yes" })}
+          >
+            {IcCheck} تسویه شد
+          </button>
+          <button
+            type="button"
+            className={`chip ${filters.settled === "no" ? "chip--violet" : ""}`}
+            onClick={() => onFiltersChange({ settled: "no" })}
+          >
+            {IcClock} تسویه نشده
+          </button>
         </div>
 
-        {/* Priority filter (severity) as segmented toggle, multi-selectable) */}
+        {/* Priority (severity) filter – segmented multi-select */}
         <div>
           <div className="seg">
             {(["normal", "urgent", "critical"] as const).map(val => {
@@ -154,7 +180,7 @@ export default function Toolbar({
                   }
                   title={severityLabels[val]}
                 >
-                  {severityIcons[val]} {/** icon */}
+                  {severityIcons[val]}{" "}
                   <span className="hidden sm:inline">{severityLabels[val]}</span>
                 </button>
               );
@@ -162,7 +188,7 @@ export default function Toolbar({
           </div>
         </div>
 
-        {/* Search (visible only if showSearch prop is true) */}
+        {/* Search field (optional) */}
         {showSearch && (
           <input
             className="input min-w-[200px] flex-1"
@@ -172,7 +198,7 @@ export default function Toolbar({
           />
         )}
 
-        {/* Save and Reset filter actions */}
+        {/* Save and Reset actions */}
         <div className="ms-auto flex items-center gap-2">
           <button className="btn btn-tone text-xs" onClick={onFiltersSave}>
             ذخیره فیلتر
@@ -183,7 +209,7 @@ export default function Toolbar({
         </div>
       </div>
 
-      {/* Row 2: Date type toggle and date range pickers */}
+      {/* Row 2: Date type toggle and range pickers */}
       <div className="mt-3 flex flex-wrap items-end gap-2">
         {/* Date type segmented toggle */}
         <div>
@@ -196,7 +222,7 @@ export default function Toolbar({
                 onClick={() => onFiltersChange({ dateType: val })}
                 title={dateTypeLabels[val]}
               >
-                {dateTypeIcons[val]}
+                {dateTypeIcons[val]}{" "}
                 <span className="hidden sm:inline">{dateTypeLabels[val]}</span>
               </button>
             ))}

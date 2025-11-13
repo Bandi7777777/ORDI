@@ -116,3 +116,11 @@ body{
 
 /* پاپ‌اور سلکت همیشه روی همه‌چیز */
 .select-popover, .select-portal { position: fixed; z-index: 1000; }
+/* استایل ویژه برای روز انتخاب‌شده در تقویم JalaliDatePicker */
+.selected-day {
+  border: 1px solid var(--c-cyan);
+  background: color-mix(in oklab, var(--c-cyan) 20%, transparent);
+  box-shadow: 0 0 8px color-mix(in oklab, var(--c-cyan) 50%, transparent);
+}
+/* می‌توان opacity متن یا رنگ آن را نیز در صورت نیاز تنظیم کرد */
+
