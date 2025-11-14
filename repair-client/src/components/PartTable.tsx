@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Part } from '../types'; // فرض بر import type
+import type { Part } from '../types';
 
 type Props = {
   parts: Part[];
@@ -20,80 +20,235 @@ export default function PartTable({
   onBulkDelete,
   onBulkSettle,
 }: Props) {
-  // منطق انتخاب‌ها (فرض بر state برای انتخاب‌ها)
   const [selected, setSelected] = React.useState<number[]>([]);
 
-  const toggleSelect = (id: number) => {
-    setSelected((prev) => prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]);
+  const selectableIds = React.useMemo(
+    () => parts.filter((p) => p.id != null).map((p) => p.id!) as number[],
+    [parts]
+  );
+
+  const allSelected =
+    selectableIds.length > 0 &&
+    selected.length === selectableIds.length;
+
+  const toggleSelectOne = (id?: number | null) => {
+    if (!id) return;
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
   };
 
-  const bulkActions = selected.length > 0 && (
-    <div className="flex gap-2 mb-4">
-      <button className="btn btn-primary text-xs" onClick={() => onBulkSettle(selected, true)}>تسویه گروهی</button>
-      <button className="btn btn-primary text-xs" onClick={() => onBulkSettle(selected, false)}>تسویه‌نشده گروهی</button>
-      <button className="btn btn-ghost text-xs" onClick={() => onBulkDelete(selected)}>حذف گروهی</button>
-    </div>
-  );
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelected([]);
+    } else {
+      setSelected(selectableIds);
+    }
+  };
+
+  const handleBulkSettle = (settled: boolean) => {
+    if (!selected.length) return;
+    onBulkSettle(selected, settled);
+    setSelected([]);
+  };
+
+  const handleBulkDelete = () => {
+    if (!selected.length) return;
+    if (!window.confirm('حذف گروهی رکوردهای انتخاب‌شده؟')) return;
+    onBulkDelete(selected);
+    setSelected([]);
+  };
+
+  const renderStatusChip = (status: Part['status']) => {
+    const label =
+      status === 'repaired'
+        ? 'تعمیر شده'
+        : 'در جریان';
+    const cls =
+      status === 'repaired'
+        ? 'chip chip--mint'
+        : 'chip chip--violet';
+    return <span className={cls}>{label}</span>;
+  };
+
+  const renderSeverityBadge = (severity: Part['severity']) => {
+    switch (severity) {
+      case 'urgent':
+        return <span className="badge badge-urgent">فوری</span>;
+      case 'critical':
+        return <span className="badge badge-critical">بحرانی</span>;
+      default:
+        return <span className="badge badge-normal">عادی</span>;
+    }
+  };
+
+  const renderSettledChip = (part: Part) => {
+    const settled = part.settled;
+    return (
+      <button
+        type="button"
+        className={
+          'part-table__settle-btn ' +
+          (settled ? 'part-table__settle-btn--on' : 'part-table__settle-btn--off')
+        }
+        onClick={() => onToggleSettled(part)}
+      >
+        {settled ? 'تسویه شد' : 'تسویه نشده'}
+      </button>
+    );
+  };
+
+  const formatMoney = (value?: number | null) => {
+    if (!value || !Number.isFinite(value)) return '—';
+    return `${value.toLocaleString('fa-IR')} ${currency}`;
+  };
+
+  const hasRows = parts.length > 0;
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-300 dark:border-gray-600 shadow-sm bg-white dark:bg-gray-800">
-      {bulkActions}
-      <table className="w-full border-collapse text-right text-gray-900 dark:text-gray-100 min-w-[1200px]">
-        <thead>
-          <tr className="bg-gray-100 dark:bg-gray-700 text-sm font-bold">
-            <th className="p-3 border-b rounded-tl-xl">انتخاب</th>
-            <th className="p-3 border-b">#</th>
-            <th className="p-3 border-b">زمان‌ها</th>
-            <th className="p-3 border-b">قطعه</th>
-            <th className="p-3 border-b">مشتری</th>
-            <th className="p-3 border-b">تعمیرکننده</th>
-            <th className="p-3 border-b">توضیح</th>
-            <th className="p-3 border-b">قیمت تعمیر</th>
-            <th className="p-3 border-b">قیمت من</th>
-            <th className="p-3 border-b">قیمت نهایی</th>
-            <th className="p-3 border-b">وضعیت</th>
-            <th className="p-3 border-b">تسویه</th>
-            <th className="p-3 border-b">اولویت</th>
-            <th className="p-3 border-b rounded-tr-xl">PDF / عملیات</th>
-          </tr>
-        </thead>
-        <tbody>
-          {parts.length === 0 ? (
-            <tr>
-              <td colSpan={14} className="p-4 text-center text-gray-500 dark:text-gray-400">
-                هنوز رکوردی ثبت نشده — از «ثبت قطعه جدید» شروع کنید.
-              </td>
-            </tr>
-          ) : (
-            parts.map((part) => (
-              <tr key={part.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
-                <td className="p-3 border-b">
-                  <input type="checkbox" checked={selected.includes(part.id!)} onChange={() => toggleSelect(part.id!)} />
-                </td>
-                <td className="p-3 border-b">{part.id}</td>
-                <td className="p-3 border-b">{part.receivedDate} - {part.completedDate || '-'}</td>
-                <td className="p-3 border-b">{part.partName}</td>
-                <td className="p-3 border-b">{part.customerName}</td>
-                <td className="p-3 border-b">{part.technicianName}</td>
-                <td className="p-3 border-b cell-ellipsis">{part.faultDesc}</td>
-                <td className="p-3 border-b">{part.repairPrice} {currency}</td>
-                <td className="p-3 border-b">{part.myPrice} {currency}</td>
-                <td className="p-3 border-b">{part.finalPrice} {currency}</td>
-                <td className="p-3 border-b">{part.status}</td>
-                <td className="p-3 border-b">
-                  <button onClick={() => onToggleSettled(part)}>{part.settled ? 'تسویه شد' : 'تسویه نشده'}</button>
-                </td>
-                <td className="p-3 border-b">{part.severity}</td>
-                <td className="p-3 border-b flex gap-2">
-                  <button className="btn btn-primary text-xs" onClick={() => onEdit(part)}>ویرایش</button>
-                  <button className="btn btn-ghost text-xs" onClick={() => onDelete(part.id!)}>حذف</button>
-                  <button className="btn btn-tone text-xs">PDF</button>
-                </td>
+    <section className="card part-table">
+      <header className="part-table__header">
+        <div className="part-table__title-block">
+          <h3 className="part-table__title">لیست قطعات ثبت‌شده</h3>
+          <p className="part-table__subtitle">
+            در این جدول می‌توانید وضعیت نهایی، تسویه، اولویت و عملیات هر سفارش را
+            مدیریت کنید.
+          </p>
+        </div>
+
+        {selected.length > 0 && (
+          <div className="part-table__bulk">
+            <span className="part-table__bulk-label">
+              {selected.length} مورد انتخاب شده
+            </span>
+            <button
+              type="button"
+              className="btn btn-tone btn-xs"
+              onClick={() => handleBulkSettle(true)}
+            >
+              تسویه گروهی
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-xs"
+              onClick={() => handleBulkSettle(false)}
+            >
+              علامت‌گذاری به‌عنوان تسویه نشده
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-xs part-table__bulk-delete"
+              onClick={handleBulkDelete}
+            >
+              حذف گروهی
+            </button>
+          </div>
+        )}
+      </header>
+
+      {!hasRows ? (
+        <div className="part-table__empty">
+          هنوز رکوردی ثبت نشده — از «ثبت قطعه جدید» شروع کنید.
+        </div>
+      ) : (
+        <div className="part-table__scroll">
+          <table className="table part-table__table">
+            <thead>
+              <tr>
+                <th style={{ width: '42px' }}>
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
+                <th style={{ width: '40px' }}>#</th>
+                <th>زمان‌ها</th>
+                <th>قطعه / مشتری</th>
+                <th>تعمیرکننده</th>
+                <th>توضیح</th>
+                <th>قیمت تعمیر</th>
+                <th>قیمت من</th>
+                <th>قیمت نهایی</th>
+                <th>وضعیت</th>
+                <th>تسویه</th>
+                <th>اولویت</th>
+                <th>PDF / عملیات</th>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
+            </thead>
+            <tbody>
+              {parts.map((part) => {
+                const id = part.id ?? 0;
+                const isSelected = selected.includes(id);
+
+                return (
+                  <tr key={id || `${part.customerName}-${part.partName}`}>
+                    <td>
+                      {part.id && (
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelectOne(part.id)}
+                        />
+                      )}
+                    </td>
+                    <td>{part.id}</td>
+                    <td className="cell-2line part-table__dates">
+                      <span>دریافت: {part.receivedDate || '—'}</span>
+                      <span>تکمیل: {part.completedDate || '—'}</span>
+                      <span>تحویل: {part.deliveredDate || '—'}</span>
+                    </td>
+                    <td className="cell-2line">
+                      <strong>{part.partName}</strong>
+                      <span className="part-table__sub">
+                        مشتری: {part.customerName || '—'}
+                      </span>
+                    </td>
+                    <td className="cell-ellipsis">
+                      {part.technicianName || '—'}
+                    </td>
+                    <td className="cell-2line">
+                      {part.faultDesc || '—'}
+                    </td>
+                    <td>{formatMoney(part.repairPrice)}</td>
+                    <td>{formatMoney(part.myPrice)}</td>
+                    <td>{formatMoney(part.finalPrice)}</td>
+                    <td>{renderStatusChip(part.status)}</td>
+                    <td>{renderSettledChip(part)}</td>
+                    <td>{renderSeverityBadge(part.severity)}</td>
+                    <td className="part-table__actions">
+                      <button
+                        type="button"
+                        className="btn btn-tone btn-xs"
+                        onClick={() => onEdit(part)}
+                      >
+                        ویرایش
+                      </button>
+                      {part.id && (
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-xs"
+                          onClick={() => onDelete(part.id!)}
+                        >
+                          حذف
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-xs"
+                        disabled
+                        title="صدور PDF (به‌زودی)"
+                      >
+                        PDF
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
-};
+}

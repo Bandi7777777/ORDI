@@ -1,126 +1,359 @@
-@import "tailwindcss";
-@import "./design-tokens/css-variables.css";
+@import "tailwindcss"; @import "./design-tokens/css-variables.css"; /* ===== Theme (Dark glass + subtle neon) ===== */ :root{ --bg-1:#0c1118; --bg-2:#0b1016; --fg-1:#eaf1ff; --fg-2:#97a7c0; --c-cyan:#48e4ff; --c-mint:#2be5b9; --c-violet:#a18bff; --c-pink:#ff79c6; --panel:rgba(16,22,34,.78); --line:rgba(210,225,255,.14); --glass-1:rgba(16,22,34,.86); --glass-2:rgba(16,22,34,.60); --shadow:0 22px 70px rgba(3,10,24,.45); --r2:12px; --r3:16px; } /* ===== Page shell ===== */ html,body,#root{height:100%} body{ color:var(--fg-1); background: radial-gradient(1200px 700px at 85% -10%, color-mix(in oklab, var(--c-cyan) 12%, transparent), transparent 55%), radial-gradient(1200px 700px at -12% 40%, color-mix(in oklab, var(--c-violet) 10%, transparent), transparent 55%), linear-gradient(180deg, var(--bg-1), var(--bg-2)); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; } .shell{ max-width: 1280px; margin-inline:auto; padding-inline: 20px; } /* ===== Header (wave) ===== */ @keyframes waveShift {0%{transform:translateX(0) translateY(0)}50%{transform:translateX(2%) translateY(2px)}100%{transform:translateX(-2%) translateY(0)}} .header{ position:sticky; top:0; z-index:30; border-bottom:1px solid var(--line); background: linear-gradient(180deg, var(--glass-1), var(--glass-2)); backdrop-filter: blur(12px); box-shadow: var(--shadow); overflow: visible; } .header::after{ content:""; position:absolute; inset:auto -10% -1px -10%; height:64px; background: radial-gradient(80px 40px at 15% 70%, color-mix(in oklab, var(--c-mint) 40%, transparent), transparent 70%), radial-gradient(90px 45px at 40% 30%, color-mix(in oklab, var(--c-violet) 40%, transparent), transparent 70%), radial-gradient(100px 50px at 75% 60%, color-mix(in oklab, var(--c-cyan) 40%, transparent), transparent 70%); clip-path: polygon(0 42%,10% 50%,20% 45%,30% 55%,40% 50%,50% 58%,60% 52%,70% 60%,80% 55%,90% 62%,100% 58%,100% 100%,0 100%); animation: waveShift 14s ease-in-out infinite alternate; pointer-events: none; } .header .brand,.header nav{ position: relative; z-index: 1; } .brand{ width:42px; height:42px; border-radius: var(--r2); display:grid; place-items:center; font-weight:900; color:#032028; background: conic-gradient(from 220deg, var(--c-cyan), var(--c-mint), var(--c-cyan)); box-shadow: 0 10px 26px color-mix(in oklab, var(--c-cyan) 28%, transparent); } .navlink{ display:inline-flex; align-items:center; gap:.5rem; padding:.6rem .9rem; border-radius:12px; color:var(--fg-2); transition: background .25s, color .25s; } .navlink.underline{ color:var(--fg-1); background: color-mix(in oklab, var(--c-cyan) 12%, transparent); } /* ===== Card / Buttons / Inputs ===== */ .card{ position:relative; overflow:visible; border-radius: var(--r3); background: var(--panel); border:1px solid var(--line); box-shadow: var(--shadow); } .btn{display:inline-flex;align-items:center;justify-content:center; padding:.72rem 1rem; border-radius: var(--r2); font-weight:700; transition: filter .2s, box-shadow .2s, transform .12s} .btn:active{ transform: translateY(1px); } .btn-primary{ color:#041019; background: linear-gradient(90deg, var(--c-cyan), var(--c-mint)); box-shadow: 0 12px 28px color-mix(in oklab, var(--c-cyan) 18%, transparent) } .btn-ghost{ background: transparent; color: var(--fg-2); border:1px solid var(--line) } .btn-tone{ background: color-mix(in oklab, var(--c-cyan) 6%, transparent); border:1px solid var(--line); color:var(--fg-1) } .input,.select,.textarea{ width:100%; border-radius: 14px; background: rgba(255,255,255,.06); color: var(--fg-1); border:1px solid var(--line); padding:.78rem 1rem; outline:none; transition: box-shadow .2s, border-color .2s, background .2s; } .input:focus,.select:focus,.textarea:focus{ border-color: var(--c-cyan); box-shadow: 0 0 0 3px color-mix(in oklab, var(--c-cyan) 22%, transparent); } .select option{ color:#eaf3ff; background:#0f172a; } /* ===== Select-portal ===== */ .select-portal{ position:fixed; z-index:1000; backdrop-filter: blur(10px); } /* ===== Table (no overflow, tidy cell spacing) ===== */ .table{ width:100%; table-layout: fixed; color:var(--fg-1); border-collapse:separate; border-spacing:0; } .table thead th{ text-align:right; padding:.72rem .9rem; font-weight:800; background: rgba(255,255,255,.06); border-bottom:1px solid var(--line); position: sticky; top: 0; z-index: 1; } .table td{ padding:.68rem .9rem; border-bottom:1px solid rgba(255,255,255,.1); vertical-align: middle; } .table tr:hover td{ background: rgba(72,228,255,.06); } /* متن‌های بلند */ .cell-ellipsis{ max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: bottom; } .cell-2line{ max-width: 320px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height:1.5; } /* ===== Timeline chips (Receive / Complete / Deliver) ===== */ .chip{display:inline-flex;align-items:center;gap:.42rem;padding:.34rem .64rem;border-radius:999px;border:1px solid var(--line);font-size:.82rem;background:rgba(255,255,255,.05)} .chip svg{opacity:.85} .chip--cyan{ border-color: color-mix(in oklab, var(--c-cyan) 42%, transparent); background: color-mix(in oklab, var(--c-cyan) 10%, transparent) } .chip--violet{border-color: color-mix(in oklab, var(--c-violet) 46%, transparent); background: color-mix(in oklab, var(--c-violet) 10%, transparent) } .chip--mint{ border-color: color-mix(in oklab, var(--c-mint) 42%, transparent); background: color-mix(in oklab, var(--c-mint) 9%, transparent) } /* ===== DateRange (Toolbar) ===== */ .datebox{ background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border:1px dashed var(--line); border-radius:16px; padding:.55rem .75rem; } .seg{ display:inline-flex; gap:4px; padding:4px; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid var(--line); } .seg-btn{ padding:.42rem .9rem; border-radius:999px; color:var(--fg-2); } .seg-btn.active{ color:var(--fg-1); background: color-mix(in oklab, var(--c-cyan) 14%, transparent); } .datebox .input,.datebox .select{ padding:.62rem .8rem; } /* ===== Dashboard tiles ===== */ .tiles{ display:grid; grid-template-columns: repeat(1,minmax(0,1fr)); gap:1rem; } @media (min-width: 768px){ .tiles{ grid-template-columns: repeat(3,minmax(0,1fr)); } } .tile{ padding:1rem; border-radius:16px; border:1px solid var(--line); background:rgba(255,255,255,.04); box-shadow: var(--shadow); } .tile .k{ font-size:.82rem; opacity:.85; } .tile .v{ font-size:1.8rem; font-weight:800; } .input,.select,.textarea{ padding:.72rem 1rem; border-radius:14px; } .select-portal{ position:fixed; z-index:1000; } .shell{ max-width:1280px; margin-inline:auto; padding-inline:20px; } @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } } .animate-slideIn { animation: slideIn 200ms ease-out both; } .toolbar-pro { border-radius: 16px; } /* Toolbar shell (کمی لطیف‌تر) */ .toolbar-pro { border-radius: 16px; } /* فاصلهٔ امن در ورودی‌ها و سلکت‌ها */ .input, .select { padding: .72rem 1rem; border-radius: 14px; } /* پاپ‌اور سلکت همیشه روی همه‌چیز */ .select-popover, .select-portal { position: fixed; z-index: 1000; } /* استایل ویژه برای روز انتخاب‌شده در تقویم JalaliDatePicker */ .selected-day { border: 1px solid var(--c-cyan); background: color-mix(in oklab, var(--c-cyan) 20%, transparent); box-shadow: 0 0 8px color-mix(in oklab, var(--c-cyan) 50%, transparent); } /* می‌توان opacity متن یا رنگ آن را نیز در صورت نیاز تنظیم کرد */
 
-/* ===== Theme (Dark glass + subtle neon) ===== */
-:root{
-  --bg-1:#0c1118; --bg-2:#0b1016;
-  --fg-1:#eaf1ff; --fg-2:#97a7c0;
+/* ======================================================================
+   Orders Kanban Board (تب سفارش‌ها)
+   ====================================================================== */
 
-  --c-cyan:#48e4ff; --c-mint:#2be5b9; --c-violet:#a18bff; --c-pink:#ff79c6;
-
-  --panel:rgba(16,22,34,.78);
-  --line:rgba(210,225,255,.14);
-  --glass-1:rgba(16,22,34,.86);
-  --glass-2:rgba(16,22,34,.60);
-  --shadow:0 22px 70px rgba(3,10,24,.45);
-
-  --r2:12px; --r3:16px;
+.orders-page {
+  margin-top: 0.75rem;
 }
 
-/* ===== Page shell ===== */
-html,body,#root{height:100%}
-body{
-  color:var(--fg-1);
-  background:
-    radial-gradient(1200px 700px at 85% -10%, color-mix(in oklab, var(--c-cyan) 12%, transparent), transparent 55%),
-    radial-gradient(1200px 700px at -12% 40%, color-mix(in oklab, var(--c-violet) 10%, transparent), transparent 55%),
-    linear-gradient(180deg, var(--bg-1), var(--bg-2));
-  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+.orders-kanban {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: slideIn 180ms ease-out;
 }
-.shell{ max-width: 1280px; margin-inline:auto; padding-inline: 20px; }
 
-/* ===== Header (wave) ===== */
-@keyframes waveShift {0%{transform:translateX(0) translateY(0)}50%{transform:translateX(2%) translateY(2px)}100%{transform:translateX(-2%) translateY(0)}}
-.header{ position:sticky; top:0; z-index:30; border-bottom:1px solid var(--line);
-  background: linear-gradient(180deg, var(--glass-1), var(--glass-2)); backdrop-filter: blur(12px); box-shadow: var(--shadow); overflow: visible; }
-.header::after{
-  content:""; position:absolute; inset:auto -10% -1px -10%; height:64px;
-  background:
-    radial-gradient(80px 40px at 15% 70%, color-mix(in oklab, var(--c-mint) 40%, transparent), transparent 70%),
-    radial-gradient(90px 45px at 40% 30%, color-mix(in oklab, var(--c-violet) 40%, transparent), transparent 70%),
-    radial-gradient(100px 50px at 75% 60%, color-mix(in oklab, var(--c-cyan) 40%, transparent), transparent 70%);
-  clip-path: polygon(0 42%,10% 50%,20% 45%,30% 55%,40% 50%,50% 58%,60% 52%,70% 60%,80% 55%,90% 62%,100% 58%,100% 100%,0 100%);
-  animation: waveShift 14s ease-in-out infinite alternate; pointer-events: none;
+.orders-kanban__columns {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
 }
-.header .brand,.header nav{ position: relative; z-index: 1; }
-.brand{ width:42px; height:42px; border-radius: var(--r2); display:grid; place-items:center; font-weight:900; color:#032028;
-  background: conic-gradient(from 220deg, var(--c-cyan), var(--c-mint), var(--c-cyan));
-  box-shadow: 0 10px 26px color-mix(in oklab, var(--c-cyan) 28%, transparent); }
-.navlink{ display:inline-flex; align-items:center; gap:.5rem; padding:.6rem .9rem; border-radius:12px; color:var(--fg-2); transition: background .25s, color .25s; }
-.navlink.underline{ color:var(--fg-1); background: color-mix(in oklab, var(--c-cyan) 12%, transparent); }
 
-/* ===== Card / Buttons / Inputs ===== */
-.card{ position:relative; overflow:visible; border-radius: var(--r3); background: var(--panel); border:1px solid var(--line); box-shadow: var(--shadow); }
-.btn{display:inline-flex;align-items:center;justify-content:center; padding:.72rem 1rem; border-radius: var(--r2); font-weight:700; transition: filter .2s, box-shadow .2s, transform .12s}
-.btn:active{ transform: translateY(1px); }
-.btn-primary{ color:#041019; background: linear-gradient(90deg, var(--c-cyan), var(--c-mint)); box-shadow: 0 12px 28px color-mix(in oklab, var(--c-cyan) 18%, transparent) }
-.btn-ghost{ background: transparent; color: var(--fg-2); border:1px solid var(--line) }
-.btn-tone{ background: color-mix(in oklab, var(--c-cyan) 6%, transparent); border:1px solid var(--line); color:var(--fg-1) }
-
-.input,.select,.textarea{
-  width:100%; border-radius: 14px;
-  background: rgba(255,255,255,.06); color: var(--fg-1);
-  border:1px solid var(--line); padding:.78rem 1rem; outline:none;
-  transition: box-shadow .2s, border-color .2s, background .2s;
+.orders-kanban__column {
+  flex: 0 0 0;
+  min-width: 260px;
+  max-width: 360px;
+  border-radius: var(--r3);
+  background: linear-gradient(
+      145deg,
+      color-mix(in oklab, var(--glass-1) 80%, transparent),
+      color-mix(in oklab, var(--glass-2) 80%, transparent)
+    );
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  padding: 0.75rem;
+  backdrop-filter: blur(18px);
 }
-.input:focus,.select:focus,.textarea:focus{ border-color: var(--c-cyan); box-shadow: 0 0 0 3px color-mix(in oklab, var(--c-cyan) 22%, transparent); }
-.select option{ color:#eaf3ff; background:#0f172a; }
 
-/* ===== Select-portal ===== */
-.select-portal{ position:fixed; z-index:1000; backdrop-filter: blur(10px); }
-
-/* ===== Table (no overflow, tidy cell spacing) ===== */
-.table{ width:100%; table-layout: fixed; color:var(--fg-1); border-collapse:separate; border-spacing:0; }
-.table thead th{ text-align:right; padding:.72rem .9rem; font-weight:800; background: rgba(255,255,255,.06); border-bottom:1px solid var(--line); position: sticky; top: 0; z-index: 1; }
-.table td{ padding:.68rem .9rem; border-bottom:1px solid rgba(255,255,255,.1); vertical-align: middle; }
-.table tr:hover td{ background: rgba(72,228,255,.06); }
-
-/* متن‌های بلند */
-.cell-ellipsis{ max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: bottom; }
-.cell-2line{ max-width: 320px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height:1.5; }
-
-/* ===== Timeline chips (Receive / Complete / Deliver) ===== */
-.chip{display:inline-flex;align-items:center;gap:.42rem;padding:.34rem .64rem;border-radius:999px;border:1px solid var(--line);font-size:.82rem;background:rgba(255,255,255,.05)}
-.chip svg{opacity:.85}
-.chip--cyan{  border-color: color-mix(in oklab, var(--c-cyan) 42%, transparent);   background: color-mix(in oklab, var(--c-cyan) 10%, transparent) }
-.chip--violet{border-color: color-mix(in oklab, var(--c-violet) 46%, transparent); background: color-mix(in oklab, var(--c-violet) 10%, transparent) }
-.chip--mint{  border-color: color-mix(in oklab, var(--c-mint) 42%, transparent);   background: color-mix(in oklab, var(--c-mint)  9%, transparent) }
-
-/* ===== DateRange (Toolbar) ===== */
-.datebox{ background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border:1px dashed var(--line); border-radius:16px; padding:.55rem .75rem; }
-.seg{ display:inline-flex; gap:4px; padding:4px; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid var(--line); }
-.seg-btn{ padding:.42rem .9rem; border-radius:999px; color:var(--fg-2); }
-.seg-btn.active{ color:var(--fg-1); background: color-mix(in oklab, var(--c-cyan) 14%, transparent); }
-.datebox .input,.datebox .select{ padding:.62rem .8rem; }
-
-/* ===== Dashboard tiles ===== */
-.tiles{ display:grid; grid-template-columns: repeat(1,minmax(0,1fr)); gap:1rem; }
-@media (min-width: 768px){ .tiles{ grid-template-columns: repeat(3,minmax(0,1fr)); } }
-.tile{ padding:1rem; border-radius:16px; border:1px solid var(--line); background:rgba(255,255,255,.04); box-shadow: var(--shadow); }
-.tile .k{ font-size:.82rem; opacity:.85; }
-.tile .v{ font-size:1.8rem; font-weight:800; }
-.input,.select,.textarea{ padding:.72rem 1rem; border-radius:14px; }
-.select-portal{ position:fixed; z-index:1000; }
-.shell{ max-width:1280px; margin-inline:auto; padding-inline:20px; }
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+.orders-kanban__column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
 }
-.animate-slideIn { animation: slideIn 200ms ease-out both; }
-.toolbar-pro { border-radius: 16px; }
-/* Toolbar shell (کمی لطیف‌تر) */
-.toolbar-pro { border-radius: 16px; }
 
-/* فاصلهٔ امن در ورودی‌ها و سلکت‌ها */
-.input, .select { padding: .72rem 1rem; border-radius: 14px; }
-
-/* پاپ‌اور سلکت همیشه روی همه‌چیز */
-.select-popover, .select-portal { position: fixed; z-index: 1000; }
-/* استایل ویژه برای روز انتخاب‌شده در تقویم JalaliDatePicker */
-.selected-day {
-  border: 1px solid var(--c-cyan);
-  background: color-mix(in oklab, var(--c-cyan) 20%, transparent);
-  box-shadow: 0 0 8px color-mix(in oklab, var(--c-cyan) 50%, transparent);
+.orders-kanban__column-title {
+  font-size: 0.9rem;
+  font-weight: 700;
 }
-/* می‌توان opacity متن یا رنگ آن را نیز در صورت نیاز تنظیم کرد */
 
+.orders-kanban__column-count {
+  min-width: 1.8rem;
+  height: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--fg-1);
+  background: color-mix(in oklab, var(--c-cyan) 14%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--c-cyan) 40%, transparent);
+}
+
+.orders-kanban__items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.3rem 0.1rem 0.1rem;
+  min-height: 4.5rem;
+}
+
+.orders-kanban__items--over {
+  border-radius: 0.9rem;
+  background: radial-gradient(
+    circle at top,
+    color-mix(in oklab, var(--c-cyan) 12%, transparent),
+    transparent 65%
+  );
+}
+
+.orders-kanban__empty {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  padding: 0.35rem 0.15rem;
+  text-align: center;
+}
+
+/* --- Order Card --- */
+
+.order-card {
+  position: relative;
+  padding: 0.7rem 0.85rem 0.6rem;
+  border-radius: 14px;
+  background: linear-gradient(
+      145deg,
+      color-mix(in oklab, var(--c-cyan) 8%, transparent),
+      transparent 60%
+    ),
+    var(--panel);
+  border: 1px solid color-mix(in oklab, var(--c-cyan) 26%, var(--line));
+  box-shadow: 0 16px 42px rgba(3, 10, 24, 0.75);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  overflow: hidden;
+  cursor: grab;
+  transition: transform 120ms ease-out, box-shadow 140ms ease-out,
+    border-color 140ms ease-out, background 150ms ease-out;
+}
+
+.order-card:active {
+  cursor: grabbing;
+}
+
+.order-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 55px rgba(3, 10, 24, 0.9);
+  border-color: color-mix(in oklab, var(--c-cyan) 40%, var(--line));
+}
+
+.order-card__accent {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at top left,
+    color-mix(in oklab, var(--c-mint) 24%, transparent),
+    transparent 55%
+  );
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.order-card__header,
+.order-card__body,
+.order-card__footer {
+  position: relative;
+  z-index: 1;
+}
+
+.order-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.order-card__title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.order-card__title {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.order-card__subtitle {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.order-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
+.order-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+}
+
+.order-card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.order-card__row--dates {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.order-card__row--price {
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-top: 0.15rem;
+}
+
+.order-card__label {
+  opacity: 0.8;
+}
+
+.order-card__value {
+  text-align: left;
+}
+
+.order-card__currency {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-right: 0.15rem;
+}
+
+.order-card__date {
+  white-space: nowrap;
+}
+
+.order-card__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.order-card__delete {
+  color: #fb7185;
+}
+/* ======================================================================
+   PartTable – لیست قطعات پایین صفحه خانه
+   ====================================================================== */
+
+.part-table {
+  margin-top: 1rem;
+}
+
+.part-table__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.part-table__title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.part-table__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.part-table__subtitle {
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+.part-table__bulk {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 0.78rem;
+}
+
+.part-table__bulk-label {
+  opacity: 0.8;
+}
+
+.part-table__bulk-delete {
+  color: #fb7185;
+}
+
+.part-table__scroll {
+  margin-top: 0.25rem;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(15, 23, 42, 0.96)
+  );
+}
+
+/* جدول داخل کارت */
+.part-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.part-table__table thead th {
+  background: rgba(15, 23, 42, 0.96);
+  color: rgba(226, 232, 240, 0.9);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.part-table__table th,
+.part-table__table td {
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid rgba(30, 41, 59, 0.9);
+}
+
+.part-table__table tbody tr:hover td {
+  background: rgba(72, 228, 255, 0.06);
+}
+
+.part-table__empty {
+  padding: 1.1rem 0.9rem 1.2rem;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* تاریخ‌ها زیر هم و مرتب */
+.part-table__dates {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+/* زیرتیتر کم‌رنگ زیر نام قطعه */
+.part-table__sub {
+  display: block;
+  font-size: 0.74rem;
+  opacity: 0.8;
+}
+
+/* دکمه تسویه در جدول */
+.part-table__settle-btn {
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(15, 23, 42, 0.9);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.part-table__settle-btn--on {
+  border-color: rgba(34, 197, 94, 0.7);
+  background: rgba(22, 163, 74, 0.18);
+  color: #bbf7d0;
+}
+
+.part-table__settle-btn--off {
+  border-color: rgba(248, 113, 113, 0.7);
+  background: rgba(248, 113, 113, 0.1);
+  color: #fecaca;
+}
+
+/* سلول عملیات */
+.part-table__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
