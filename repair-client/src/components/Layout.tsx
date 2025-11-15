@@ -1,7 +1,9 @@
+// مسیر: repair-client/src/components/Layout.tsx
+
 import { ReactNode } from "react";
 import type { Theme, Palette } from "../types";
 
-type View = "list" | "dashboard" | "orders" | "settings";
+type View = "list" | "dashboard" | "settings";
 
 type Props = {
   children: ReactNode;
@@ -20,9 +22,9 @@ export default function Layout({
   theme,
   onThemeToggle,
   palette = "ink",
-  onPaletteChange
+  onPaletteChange,
 }: Props) {
-  // Toggle theme between light and dark (treat "system" as light by default)
+  // Toggle theme between light and dark (treat "system" as dark by system preference)
   const handleThemeToggle = () => {
     const nextTheme: Theme =
       theme === "dark" ? "light" : "dark";
@@ -40,26 +42,33 @@ export default function Layout({
   // Icons for theme (sun for light mode, moon for dark mode) and palette
   const SunIcon = (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2"/>
-      <path d="M12 1v3 M12 20v3 M4 12H1 M20 12h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M12 1v3 M12 20v3 M4 12H1 M20 12h3"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
   const MoonIcon = (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-      <path 
-        d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79Z" 
-        fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+      <path
+        d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
     </svg>
   );
   const PaletteIcon = (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-      <circle cx="12" cy="12" r="3" fill="currentColor" /> 
+      <circle cx="12" cy="12" r="3" fill="currentColor" />
     </svg>
   );
 
-  // Choose icon based on current theme
   const themeIcon = theme === "dark" ? SunIcon : MoonIcon;
 
   return (
@@ -68,56 +77,55 @@ export default function Layout({
         <div className="mx-auto shell py-3 flex items-center justify-between">
           {/* Brand and title */}
           <div className="flex items-center gap-3">
-            <button 
-              type="button" 
-              className="brand" 
-              onClick={() => onNavigate("list")} 
+            <button
+              type="button"
+              className="brand"
+              onClick={() => onNavigate("list")}
               title="خانه"
             >
               R
             </button>
             <h1 className="text-base font-bold">Ordi — Repair Tracker</h1>
           </div>
+
           {/* Navigation links and theme/palette toggles */}
-          <nav className="flex items-center gap-2" style={{ position: "relative", zIndex: 1 }}>
-            <button 
-              className={`navlink ${current === "list" ? "underline" : ""}`} 
+          <nav
+            className="flex items-center gap-2"
+            style={{ position: "relative", zIndex: 1 }}
+          >
+            <button
+              className={`navlink ${current === "list" ? "underline" : ""}`}
               onClick={() => onNavigate("list")}
             >
               خانه
             </button>
-            <button 
-              className={`navlink ${current === "dashboard" ? "underline" : ""}`} 
+            <button
+              className={`navlink ${current === "dashboard" ? "underline" : ""}`}
               onClick={() => onNavigate("dashboard")}
             >
               داشبورد
             </button>
-            <button 
-              className={`navlink ${current === "orders" ? "underline" : ""}`} 
-              onClick={() => onNavigate("orders")}
-            >
-              سفارش‌ها
-            </button>
-            <button 
-              className={`navlink ${current === "settings" ? "underline" : ""}`} 
+            <button
+              className={`navlink ${current === "settings" ? "underline" : ""}`}
               onClick={() => onNavigate("settings")}
             >
               تنظیمات
             </button>
 
-            {/* Theme toggle button (icon with hidden label in compact mode) */}
-            <button 
-              className="navlink" 
-              onClick={handleThemeToggle} 
+            {/* Theme toggle */}
+            <button
+              className="navlink"
+              onClick={handleThemeToggle}
               title="تغییر تم"
             >
               {themeIcon}
               <span className="hidden sm:inline">تم</span>
             </button>
-            {/* Palette cycle button (icon with hidden label in compact mode) */}
-            <button 
-              className="navlink" 
-              onClick={handlePaletteToggle} 
+
+            {/* Palette toggle */}
+            <button
+              className="navlink"
+              onClick={handlePaletteToggle}
               title="تغییر پالت رنگ"
             >
               {PaletteIcon}
@@ -127,9 +135,7 @@ export default function Layout({
         </div>
       </header>
 
-      <main className="shell py-6">
-        {children}
-      </main>
+      <main className="shell py-6">{children}</main>
     </div>
   );
 }

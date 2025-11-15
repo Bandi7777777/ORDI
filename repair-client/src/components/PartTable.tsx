@@ -1,5 +1,7 @@
-import React from 'react';
-import type { Part } from '../types';
+// مسیر: repair-client/src/components/PartTable.tsx
+
+import React from "react";
+import type { Part } from "../types";
 
 type Props = {
   parts: Part[];
@@ -54,28 +56,23 @@ export default function PartTable({
 
   const handleBulkDelete = () => {
     if (!selected.length) return;
-    if (!window.confirm('حذف گروهی رکوردهای انتخاب‌شده؟')) return;
+    if (!window.confirm("حذف گروهی رکوردهای انتخاب‌شده؟")) return;
     onBulkDelete(selected);
     setSelected([]);
   };
 
-  const renderStatusChip = (status: Part['status']) => {
-    const label =
-      status === 'repaired'
-        ? 'تعمیر شده'
-        : 'در جریان';
+  const renderStatusChip = (status: Part["status"]) => {
+    const label = status === "repaired" ? "تعمیر شده" : "در جریان";
     const cls =
-      status === 'repaired'
-        ? 'chip chip--mint'
-        : 'chip chip--violet';
+      status === "repaired" ? "chip chip--mint" : "chip chip--violet";
     return <span className={cls}>{label}</span>;
   };
 
-  const renderSeverityBadge = (severity: Part['severity']) => {
+  const renderSeverityBadge = (severity: Part["severity"]) => {
     switch (severity) {
-      case 'urgent':
+      case "urgent":
         return <span className="badge badge-urgent">فوری</span>;
-      case 'critical':
+      case "critical":
         return <span className="badge badge-critical">بحرانی</span>;
       default:
         return <span className="badge badge-normal">عادی</span>;
@@ -88,19 +85,19 @@ export default function PartTable({
       <button
         type="button"
         className={
-          'part-table__settle-btn ' +
-          (settled ? 'part-table__settle-btn--on' : 'part-table__settle-btn--off')
+          "part-table__settle-btn " +
+          (settled ? "part-table__settle-btn--on" : "part-table__settle-btn--off")
         }
         onClick={() => onToggleSettled(part)}
       >
-        {settled ? 'تسویه شد' : 'تسویه نشده'}
+        {settled ? "تسویه شد" : "تسویه نشده"}
       </button>
     );
   };
 
   const formatMoney = (value?: number | null) => {
-    if (!value || !Number.isFinite(value)) return '—';
-    return `${value.toLocaleString('fa-IR')} ${currency}`;
+    if (!value || !Number.isFinite(value)) return "—";
+    return `${value.toLocaleString("fa-IR")} ${currency}`;
   };
 
   const hasRows = parts.length > 0;
@@ -111,7 +108,7 @@ export default function PartTable({
         <div className="part-table__title-block">
           <h3 className="part-table__title">لیست قطعات ثبت‌شده</h3>
           <p className="part-table__subtitle">
-            در این جدول می‌توانید وضعیت نهایی، تسویه، اولویت و عملیات هر سفارش را
+            در این جدول می‌توانید وضعیت نهایی، تسویه و اولویت هر سفارش را
             مدیریت کنید.
           </p>
         </div>
@@ -155,14 +152,14 @@ export default function PartTable({
           <table className="table part-table__table">
             <thead>
               <tr>
-                <th style={{ width: '42px' }}>
+                <th style={{ width: "42px" }}>
                   <input
                     type="checkbox"
                     checked={allSelected}
                     onChange={toggleSelectAll}
                   />
                 </th>
-                <th style={{ width: '40px' }}>#</th>
+                <th style={{ width: "40px" }}>#</th>
                 <th>زمان‌ها</th>
                 <th>قطعه / مشتری</th>
                 <th>تعمیرکننده</th>
@@ -194,21 +191,21 @@ export default function PartTable({
                     </td>
                     <td>{part.id}</td>
                     <td className="cell-2line part-table__dates">
-                      <span>دریافت: {part.receivedDate || '—'}</span>
-                      <span>تکمیل: {part.completedDate || '—'}</span>
-                      <span>تحویل: {part.deliveredDate || '—'}</span>
+                      <span>دریافت: {part.receivedDate || "—"}</span>
+                      <span>تکمیل: {part.completedDate || "—"}</span>
+                      <span>تحویل: {part.deliveredDate || "—"}</span>
                     </td>
                     <td className="cell-2line">
                       <strong>{part.partName}</strong>
                       <span className="part-table__sub">
-                        مشتری: {part.customerName || '—'}
+                        مشتری: {part.customerName || "—"}
                       </span>
                     </td>
                     <td className="cell-ellipsis">
-                      {part.technicianName || '—'}
+                      {part.technicianName || "—"}
                     </td>
                     <td className="cell-2line">
-                      {part.faultDesc || '—'}
+                      {part.faultDesc || "—"}
                     </td>
                     <td>{formatMoney(part.repairPrice)}</td>
                     <td>{formatMoney(part.myPrice)}</td>
