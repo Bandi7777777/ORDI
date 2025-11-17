@@ -1,9 +1,7 @@
-// مسیر: repair-client/src/components/Layout.tsx
-
 import { ReactNode } from "react";
 import type { Theme, Palette } from "../types";
 
-type View = "list" | "dashboard" | "settings";
+type View = "list" | "orders" | "dashboard" | "settings";
 
 type Props = {
   children: ReactNode;
@@ -24,14 +22,11 @@ export default function Layout({
   palette = "ink",
   onPaletteChange,
 }: Props) {
-  // Toggle theme between light and dark (treat "system" as dark by system preference)
   const handleThemeToggle = () => {
-    const nextTheme: Theme =
-      theme === "dark" ? "light" : "dark";
+    const nextTheme: Theme = theme === "dark" ? "light" : "dark";
     onThemeToggle?.(nextTheme);
   };
 
-  // Cycle through palette options (Ink -> Prism -> Sunset -> back to Ink)
   const handlePaletteToggle = () => {
     const palettes: Palette[] = ["ink", "prism", "sunset"];
     const idx = palettes.indexOf(palette);
@@ -39,7 +34,6 @@ export default function Layout({
     onPaletteChange?.(nextPalette);
   };
 
-  // Icons for theme (sun for light mode, moon for dark mode) and palette
   const SunIcon = (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
       <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
@@ -88,7 +82,7 @@ export default function Layout({
             <h1 className="text-base font-bold">Ordi — Repair Tracker</h1>
           </div>
 
-          {/* Navigation links and theme/palette toggles */}
+          {/* Navigation */}
           <nav
             className="flex items-center gap-2"
             style={{ position: "relative", zIndex: 1 }}
@@ -100,13 +94,23 @@ export default function Layout({
               خانه
             </button>
             <button
-              className={`navlink ${current === "dashboard" ? "underline" : ""}`}
+              className={`navlink ${current === "orders" ? "underline" : ""}`}
+              onClick={() => onNavigate("orders")}
+            >
+              سفارش‌ها
+            </button>
+            <button
+              className={`navlink ${
+                current === "dashboard" ? "underline" : ""
+              }`}
               onClick={() => onNavigate("dashboard")}
             >
               داشبورد
             </button>
             <button
-              className={`navlink ${current === "settings" ? "underline" : ""}`}
+              className={`navlink ${
+                current === "settings" ? "underline" : ""
+              }`}
               onClick={() => onNavigate("settings")}
             >
               تنظیمات

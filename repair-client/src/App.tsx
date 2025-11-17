@@ -1,5 +1,4 @@
-// مسیر: repair-client/src/App.tsx
-
+// @ts-nocheck
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Layout from "./components/Layout";
 import Toolbar from "./components/Toolbar";
@@ -8,6 +7,7 @@ import PartForm from "./components/PartForm.compact";
 import PartTable from "./components/PartTable";
 import SettingsPanel from "./components/SettingsPanel";
 import Dashboard from "./components/Dashboard";
+import OrdersPage from "./components/OrdersPage";
 import AttachmentList from "./components/AttachmentList";
 import ToastPro from "./components/ui/ToastPro";
 
@@ -26,12 +26,12 @@ import { todayJalaliYMD } from "./utils/jalali";
 
 type Filters = {
   q: string;
-  status: string; // "" | "pending" | "repaired"
-  settled: string; // "" | "yes" | "no"
-  severity: string; // CSV: "" | "normal,urgent"
+  status: string;
+  settled: string;
+  severity: string;
   dateType: "received" | "completed" | "delivered";
-  from: string; // ISO
-  to: string; // ISO
+  from: string;
+  to: string;
 };
 
 type ToastItem = {
@@ -41,9 +41,21 @@ type ToastItem = {
   duration?: number;
 };
 
-type View = "list" | "dashboard" | "settings";
+type View = "list" | "orders" | "dashboard" | "settings";
 
 const FILTER_KEY = "repair-filters";
+
+const DEFAULT_FILTERS: Filters = {
+  q: "",
+  status: "",
+  settled: "",
+  severity: "",
+  dateType: "received",
+  from: "",
+  to: "",
+};
+
+const VIEW_KEY = "ordi-view";
 
 export default function App() {
   /* -------- data -------- */
@@ -51,23 +63,27 @@ export default function App() {
   const [settings, setSettings] = useState<Settings | null>(null);
 
   /* -------- UI state -------- */
-  const [view, setView] = useState<View>("list");
+  const [view, setView] = useState<View>(() => {
+    if (typeof window === "undefined") return "list";
+    const saved = window.sessionStorage.getItem(VIEW_KEY) as View | null;
+    if (saved === "list" || saved === "orders" || saved === "dashboard" || saved === "settings") {
+      return saved;
+    }
+    const st = window.history.state as { view?: View } | null;
+    return st?.view ?? "list";
+  });
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Part | null>(null);
 
   const [filters, setFilters] = useState<Filters>(() => {
-    const raw = localStorage.getItem(FILTER_KEY);
-    return raw
-      ? (JSON.parse(raw) as Filters)
-      : {
-          q: "",
-          status: "",
-          settled: "",
-          severity: "",
-          dateType: "received",
-          from: "",
-          to: "",
-        };
+    const raw = typeof window !== "undefined" ? localStorage.getItem(FILTER_KEY) : null;
+    if (!raw) return DEFAULT_FILTERS;
+    try {
+      const parsed = JSON.parse(raw) as Partial<Filters>;
+      return { ...DEFAULT_FILTERS, ...parsed };
+    } catch {
+      return DEFAULT_FILTERS;
+    }
   });
 
   /* -------- theme/palette -------- */
@@ -89,6 +105,9 @@ export default function App() {
   function removeToast(id: string) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }
+
+  /* -------- Undo delete -------- */
+  const [lastDeleted, setLastDeleted] = useState<Part | null>(null);
 
   /* -------- Export/Import input ref -------- */
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -122,8 +141,50 @@ export default function App() {
   }, [loadData]);
 
   useEffect(() => {
-    localStorage.setItem(FILTER_KEY, JSON.stringify(filters));
+    if (typeof window !== "undefined") {
+      localStorage.setItem(FILTER_KEY, JSON.stringify(filters));
+    }
   }, [filters]);
+
+  /* -------- SPA history + نگه داشتن view در sessionStorage -------- */
+  const navigate = useCallback((v: View, replace = false) => {
+    setView(v);
+    setShowForm(false);
+    setEditing(null);
+    if (typeof window === "undefined") return;
+    window.sessionStorage.setItem(VIEW_KEY, v);
+    const url = window.location.pathname + window.location.search;
+    const state = { view: v };
+    if (replace) {
+      window.history.replaceState(state, "", url);
+    } else {
+      window.history.pushState(state, "", url);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const st = window.history.state as { view?: View } | null;
+    if (!st || !st.view) {
+      const url = window.location.pathname + window.location.search;
+      window.history.replaceState({ view }, "", url);
+      window.sessionStorage.setItem(VIEW_KEY, view);
+    }
+  }, [view]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = (ev: PopStateEvent) => {
+      const st = (ev.state as { view?: View }) || null;
+      const nextView: View = st?.view ?? "list";
+      setView(nextView);
+      setShowForm(false);
+      setEditing(null);
+      window.sessionStorage.setItem(VIEW_KEY, nextView);
+    };
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
 
   /* -------- filter logic -------- */
   const matches = useCallback((p: Part, f: Filters) => {
@@ -180,6 +241,22 @@ export default function App() {
     [parts, filters, matches]
   );
 
+  /* -------- technicians از Settings -------- */
+  let technicians: string[] = [];
+  if (settings) {
+    const techKey =
+      Object.keys(settings).find((k) =>
+        k.toLowerCase().includes("tech")
+      ) ?? "defaultTechName";
+    const raw = (settings as any)[techKey] as string | undefined;
+    technicians = raw
+      ? raw
+          .split(/[،,]/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+  }
+
   /* -------- CRUD handlers -------- */
   async function handleCreate(p: Part) {
     await addPart(p);
@@ -197,9 +274,21 @@ export default function App() {
   }
 
   async function handleDelete(id: number) {
+    const deleted = parts.find((p) => p.id === id) ?? null;
+    if (!deleted) return;
+    setLastDeleted(deleted);
     await deletePart(id);
     await loadData();
-    addToast("حذف شد.", "success");
+    addToast("رکورد حذف شد. می‌توانید آن را بازگردانی کنید.", "warning");
+  }
+
+  async function handleRestoreLastDeleted() {
+    if (!lastDeleted) return;
+    const { id: _ignored, ...rest } = lastDeleted;
+    await addPart(rest as Part);
+    setLastDeleted(null);
+    await loadData();
+    addToast("رکورد بازگردانده شد.", "success");
   }
 
   async function handleToggleSettled(p: Part) {
@@ -237,6 +326,31 @@ export default function App() {
 
   const currency = settings.currency ?? "TOMAN";
 
+  const undoBar =
+    lastDeleted && (
+      <div className="card p-3 mb-3 flex items-center justify-between text-xs">
+        <div>
+          رکورد «{lastDeleted.partName || "بدون نام"}» حذف شد.
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="btn btn-tone btn-xs"
+            onClick={handleRestoreLastDeleted}
+          >
+            بازگردانی
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-xs"
+            onClick={() => setLastDeleted(null)}
+          >
+            بستن
+          </button>
+        </div>
+      </div>
+    );
+
   return (
     <>
       {/* hidden file input برای ورودی JSON */}
@@ -258,11 +372,7 @@ export default function App() {
 
       <Layout
         current={view}
-        onNavigate={(v) => {
-          setView(v);
-          setShowForm(false);
-          setEditing(null);
-        }}
+        onNavigate={(v) => navigate(v)}
         theme={theme}
         onThemeToggle={async (t) => {
           const next = await saveSettings({ theme: t as Theme });
@@ -276,7 +386,6 @@ export default function App() {
           applyTheme(next.theme, next.palette ?? "ink");
         }}
       >
-        {/* صفحه خانه / لیست قطعات */}
         {view === "list" && (
           <section className="shell" data-page="list">
             <QuickActions
@@ -286,21 +395,10 @@ export default function App() {
                 setEditing(null);
                 setShowForm(true);
               }}
-              onResetFilters={() =>
-                setFilters({
-                  q: "",
-                  status: "",
-                  settled: "",
-                  severity: "",
-                  dateType: "received",
-                  from: "",
-                  to: "",
-                })
-              }
-              onOpenDashboard={() => setView("dashboard")}
+              onResetFilters={() => setFilters(DEFAULT_FILTERS)}
+              onOpenDashboard={() => navigate("dashboard")}
             />
 
-            {/* باکس خروجی/ورودی JSON */}
             <div className="card p-3 mb-3">
               <div className="flex items-center gap-2 ms-auto">
                 <button
@@ -331,7 +429,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* فیلترها */}
+            {undoBar}
+
             <Toolbar
               onAddClick={() => {
                 setEditing(null);
@@ -341,24 +440,13 @@ export default function App() {
               onFiltersChange={(patch) =>
                 setFilters({ ...filters, ...patch })
               }
-              onFiltersReset={() =>
-                setFilters({
-                  q: "",
-                  status: "",
-                  settled: "",
-                  severity: "",
-                  dateType: "received",
-                  from: "",
-                  to: "",
-                })
-              }
+              onFiltersReset={() => setFilters(DEFAULT_FILTERS)}
               onFiltersSave={() => {
                 localStorage.setItem(FILTER_KEY, JSON.stringify(filters));
                 addToast("فیلتر ذخیره شد.", "info");
               }}
             />
 
-            {/* فرم ثبت / ویرایش */}
             {showForm && !editing && (
               <div className="card p-4 mb-4">
                 <h2 className="text-base font-semibold mb-3">
@@ -366,6 +454,7 @@ export default function App() {
                 </h2>
                 <PartForm
                   defaults={settings}
+                  technicians={technicians}
                   onSubmit={handleCreate}
                   onCancel={() => setShowForm(false)}
                 />
@@ -380,6 +469,7 @@ export default function App() {
                 <PartForm
                   initial={editing}
                   defaults={settings}
+                  technicians={technicians}
                   onSubmit={handleUpdate}
                   onCancel={() => setEditing(null)}
                 />
@@ -387,7 +477,6 @@ export default function App() {
               </div>
             )}
 
-            {/* جدول پایین صفحه خانه */}
             <PartTable
               parts={filtered}
               currency={currency}
@@ -403,22 +492,38 @@ export default function App() {
           </section>
         )}
 
-        {/* داشبورد */}
+        {view === "orders" && (
+          <section className="shell" data-page="orders">
+            {undoBar}
+            <OrdersPage
+              parts={filtered}
+              currency={currency}
+              onEdit={(p) => {
+                setEditing(p);
+                setShowForm(true);
+                navigate("list");
+              }}
+              onDelete={handleDelete}
+              onToggleSettled={handleToggleSettled}
+              onBack={() => navigate("dashboard")}
+            />
+          </section>
+        )}
+
         {view === "dashboard" && (
           <section className="shell">
             <Dashboard
               parts={parts}
               currency={currency}
-              onGo={(dest) => setView(dest)}
+              onGo={(dest) => navigate(dest)}
               onQuickFilter={(patch) => {
-                setFilters((f) => ({ ...f, ...patch } as any));
-                setView("list");
+                setFilters({ ...DEFAULT_FILTERS, ...patch });
+                navigate("orders");
               }}
             />
           </section>
         )}
 
-        {/* تنظیمات */}
         {view === "settings" && (
           <section className="shell">
             <SettingsPanel

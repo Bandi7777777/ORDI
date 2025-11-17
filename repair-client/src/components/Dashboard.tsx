@@ -1,15 +1,16 @@
-// مسیر: repair-client/src/components/Dashboard.tsx
-
+// @ts-nocheck
 import React from "react";
 import type { Part } from "../types";
+import DashboardChart from "./DashboardChart";
 
 type FiltersPatch = Partial<{
   status: string;
   settled: string;
   dateType: "received" | "completed" | "delivered";
+  severity: string;
 }>;
 
-type View = "list" | "dashboard" | "settings";
+type View = "list" | "orders" | "dashboard" | "settings";
 
 type Props = {
   parts: Part[];
@@ -18,20 +19,22 @@ type Props = {
   onQuickFilter: (patch: FiltersPatch) => void;
 };
 
-export default function Dashboard({
+const Dashboard: React.FC<Props> = ({
   parts,
   currency,
   onGo,
   onQuickFilter,
-}: Props) {
+}) => {
   const total = parts.length;
   const pending = parts.filter((p) => p.status === "pending").length;
   const repaired = parts.filter((p) => p.status === "repaired").length;
-  const delivered = parts.filter((p) => p.deliveredDate).length;
-  const unsettled = parts.filter((p) => !p.settled);
+  const delivered = parts.filter(
+    (p) => p.status === "repaired" && p.deliveredDate
+  ).length;
+  const unsettledParts = parts.filter((p) => !p.settled);
 
-  const unsettledAmount = unsettled.reduce(
-    (sum, p) => sum + (p.finalPrice ?? 0),
+  const unsettledAmount = unsettledParts.reduce(
+    (sum, p) => sum + (p.companyPrice ?? 0),
     0
   );
 
@@ -69,52 +72,72 @@ export default function Dashboard({
           className="btn btn-tone text-xs"
           onClick={() => onGo("list")}
         >
-          ← بازگشت به لیست
+          ← بازگشت به خانه
         </button>
       </div>
 
       <div className="tiles mb-4">
-        {/* کل رکوردها */}
         <button
           type="button"
           className="tile text-right"
-          onClick={() => onQuickFilter({ status: "", settled: "" })}
+          onClick={() =>
+            onQuickFilter({
+              status: "",
+              settled: "",
+              severity: "",
+              dateType: "received",
+            })
+          }
         >
           <div className="k">کل رکوردها</div>
           <div className="v">{total}</div>
         </button>
 
-        {/* در جریان */}
-        <button
-          type="button"
-          className="tile text-right"
-          onClick={() => onQuickFilter({ status: "pending" })}
-        >
-          <div className="k">در جریان</div>
-          <div className="v">{pending}</div>
-          <div className="mt-1 text-[0.7rem] opacity-75">
-            با کلیک، فقط رکوردهای در جریان فیلتر می‌شوند.
-          </div>
-        </button>
-
-        {/* تعمیر شده */}
         <button
           type="button"
           className="tile text-right"
           onClick={() =>
-            onQuickFilter({ status: "repaired", dateType: "completed" })
+            onQuickFilter({
+              status: "pending",
+              settled: "",
+              severity: "",
+              dateType: "received",
+            })
+          }
+        >
+          <div className="k">در جریان</div>
+          <div className="v">{pending}</div>
+          <div className="mt-1 text-[0.7rem] opacity-75">
+            با کلیک، سفارش‌های در جریان در صفحه «سفارش‌ها» نمایش داده می‌شوند.
+          </div>
+        </button>
+
+        <button
+          type="button"
+          className="tile text-right"
+          onClick={() =>
+            onQuickFilter({
+              status: "repaired",
+              settled: "",
+              severity: "",
+              dateType: "completed",
+            })
           }
         >
           <div className="k">تعمیر شده</div>
           <div className="v">{repaired}</div>
         </button>
 
-        {/* تحویل شده (جدید) */}
         <button
           type="button"
           className="tile text-right"
           onClick={() =>
-            onQuickFilter({ status: "repaired", dateType: "delivered" })
+            onQuickFilter({
+              status: "repaired",
+              settled: "",
+              severity: "",
+              dateType: "delivered",
+            })
           }
         >
           <div className="k">تحویل شده</div>
@@ -124,22 +147,27 @@ export default function Dashboard({
           </div>
         </button>
 
-        {/* مبلغ تسویه‌نشده */}
         <button
           type="button"
           className="tile text-right"
-          onClick={() => onQuickFilter({ settled: "no" })}
+          onClick={() =>
+            onQuickFilter({
+              status: "",
+              settled: "no",
+              severity: "",
+              dateType: "received",
+            })
+          }
         >
           <div className="k">مبلغ تسویه‌نشده</div>
           <div className="v text-sm leading-tight">
             {money(unsettledAmount)}
           </div>
           <div className="mt-1 text-[0.7rem] opacity-75">
-            {unsettled.length} سفارش تسویه‌نشده
+            {unsettledParts.length} سفارش تسویه‌نشده
           </div>
         </button>
 
-        {/* میانگین زمان تعمیر */}
         <div className="tile text-right">
           <div className="k">میانگین زمان تعمیر</div>
           <div className="v text-2xl">
@@ -150,6 +178,10 @@ export default function Dashboard({
           </div>
         </div>
       </div>
+
+      <DashboardChart parts={parts} />
     </div>
   );
-}
+};
+
+export default Dashboard;

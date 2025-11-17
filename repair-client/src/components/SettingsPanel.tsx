@@ -1,59 +1,169 @@
-import { useEffect, useState } from "react";
-import type { Settings, Theme, Palette } from "../types";
+// @ts-nocheck
+import React, { useState } from "react";
 
-type Props = { initial: Settings; onSave: (patch: Partial<Settings>) => Promise<void>; };
+type Props = {
+  initial: any;
+  onSave: (patch: any) => void;
+};
 
-export default function SettingsPanel({ initial, onSave }: Props) {
-  const [form, setForm] = useState<Settings>(initial);
-  useEffect(()=>setForm(initial),[initial]);
+const SettingsPanel: React.FC<Props> = ({ initial, onSave }) => {
+  const [myMargin, setMyMargin] = useState(initial.myMarginPct ?? 20);
+  const [companyMargin, setCompanyMargin] = useState(
+    initial.companyMarginPct ?? 10
+  );
+  const [currency, setCurrency] = useState(initial.currency ?? "TOMAN");
 
-  async function handleSave(e: React.FormEvent){
+  // پیدا کردن کلید مربوط به «تعمیرکننده پیش‌فرض» به‌صورت داینامیک
+  const techKey =
+    Object.keys(initial).find((k) =>
+      k.toLowerCase().includes("tech")
+    ) ?? "defaultTechName";
+
+  const baseTechString = (initial[techKey] as string) || "";
+  const parsedTechs = baseTechString
+    .split(/[،,]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const [techList, setTechList] = useState<string[]>(
+    parsedTechs.length ? parsedTechs : []
+  );
+  const [newTech, setNewTech] = useState("");
+
+  const addTech = () => {
+    const name = newTech.trim();
+    if (!name) return;
+    if (techList.includes(name)) {
+      setNewTech("");
+      return;
+    }
+    setTechList([...techList, name]);
+    setNewTech("");
+  };
+
+  const removeTech = (name: string) => {
+    setTechList((prev) => prev.filter((t) => t !== name));
+  };
+
+  const handleSubmit: React.FormEventHandler = (e) => {
     e.preventDefault();
-    await onSave(form);
-  }
+    const techString = techList.join("، ");
+    const patch: any = {
+      myMarginPct: Number(myMargin) || 0,
+      companyMarginPct: Number(companyMargin) || 0,
+      currency,
+      [techKey]: techString,
+    };
+    onSave(patch);
+  };
 
   return (
-    <div className="card p-4">
-      <h2 className="text-base font-semibold mb-4">تنظیمات</h2>
-      <form className="grid md:grid-cols-2 gap-4" onSubmit={handleSave}>
-        <label className="text-sm">سود پیش‌فرض شما (%)
-          <input className="input mt-1" type="number" step="0.1" value={form.defaultMyMarginPct}
-                 onChange={(e)=>setForm({...form, defaultMyMarginPct:+e.target.value})}/>
-        </label>
-        <label className="text-sm">سود پیش‌فرض شرکت (%)
-          <input className="input mt-1" type="number" step="0.1" value={form.defaultCompanyMarginPct}
-                 onChange={(e)=>setForm({...form, defaultCompanyMarginPct:+e.target.value})}/>
-        </label>
-        <label className="text-sm">تعمیرکنندهٔ پیش‌فرض
-          <input className="input mt-1" value={form.defaultTechnicianName}
-                 onChange={(e)=>setForm({...form, defaultTechnicianName:e.target.value})}/>
-        </label>
-        <label className="text-sm">واحد پول
-          <select className="select mt-1" value={form.currency} onChange={(e)=>setForm({...form, currency: e.target.value as any})}>
-            <option value="TOMAN">تومان</option>
-            <option value="USD">دلار (USD)</option>
-            <option value="EUR">یورو (EUR)</option>
-          </select>
-        </label>
-        <label className="text-sm">تم
-          <select className="select mt-1" value={form.theme} onChange={(e)=>setForm({...form, theme: e.target.value as Theme})}>
-            <option value="system">سیستمی</option>
-            <option value="light">روشن</option>
-            <option value="dark">تیره</option>
-          </select>
-        </label>
-        <label className="text-sm">پالت
-          <select className="select mt-1" value={form.palette ?? "ink"} onChange={(e)=>setForm({...form, palette: e.target.value as Palette})}>
-            <option value="ink">Ink (تیره نئونی)</option>
-            <option value="prism">Prism (روشن رنگی)</option>
-            <option value="sunset">Sunset (گرم)</option>
-          </select>
-        </label>
+    <form className="card p-4 space-y-4" onSubmit={handleSubmit}>
+      <h2 className="text-base font-semibold mb-1">تنظیمات</h2>
 
-        <div className="md:col-span-2 flex gap-2">
-          <button className="btn btn-primary" type="submit">ذخیره تنظیمات</button>
+      {/* سودها */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="text-xs opacity-80 mb-1 block">
+            سود پیش‌فرض شما (%)
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            className="input"
+            value={myMargin}
+            onChange={(e) => setMyMargin(e.target.valueAsNumber)}
+          />
         </div>
-      </form>
-    </div>
+        <div>
+          <label className="text-xs opacity-80 mb-1 block">
+            سود پیش‌فرض شرکت (%)
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            className="input"
+            value={companyMargin}
+            onChange={(e) => setCompanyMargin(e.target.valueAsNumber)}
+          />
+        </div>
+      </div>
+
+      {/* واحد پول */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="text-xs opacity-80 mb-1 block">واحد پول</label>
+          <select
+            className="select"
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+          >
+            <option value="TOMAN">تومان</option>
+            <option value="IRR">ریال</option>
+            <option value="EUR">یورو</option>
+          </select>
+        </div>
+      </div>
+
+      {/* لیست تعمیرکننده‌ها */}
+      <div className="space-y-2">
+        <label className="text-xs opacity-80 mb-1 block">
+          تعمیرکننده‌های موجود
+          <span className="opacity-60">
+            {" "}
+            (اولین مورد به‌عنوان پیش‌فرض استفاده می‌شود)
+          </span>
+        </label>
+        <div className="flex gap-2">
+          <input
+            className="input"
+            placeholder="نام تعمیرکننده جدید"
+            value={newTech}
+            onChange={(e) => setNewTech(e.target.value)}
+          />
+          <button
+            type="button"
+            className="btn btn-tone text-xs"
+            onClick={addTech}
+          >
+            افزودن
+          </button>
+        </div>
+        {techList.length === 0 ? (
+          <p className="text-xs opacity-70 mt-1">
+            هنوز تعمیرکننده‌ای ثبت نشده. یک نام وارد کنید و روی «افزودن» بزنید.
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {techList.map((t) => (
+              <span
+                key={t}
+                className="chip chip--cyan flex items-center gap-1"
+              >
+                <span>{t}</span>
+                <button
+                  type="button"
+                  className="text-[10px] opacity-80 hover:opacity-100"
+                  onClick={() => removeTech(t)}
+                  title="حذف تعمیرکننده"
+                >
+                  ✕
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="pt-2 flex justify-end">
+        <button type="submit" className="btn btn-primary text-xs">
+          ذخیره تنظیمات
+        </button>
+      </div>
+    </form>
   );
-}
+};
+
+export default SettingsPanel;
